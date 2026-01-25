@@ -152,6 +152,42 @@ def split_nodes_link(old_nodes : list[TextNode]):
                 new_nodes.extend(nodes)
     return new_nodes
 
+# Finally using all the functions in one function
+def text_to_textnodes(text):
+    node = TextNode(
+        text=text,
+        text_type=TextType.PLAIN_TEXT
+    )
+    # Handling bold
+    new_nodes = split_nodes_delimiter(
+                    old_nodes=[node],
+                    delimiter="**",
+                    text_type=TextType.BOLD_TEXT
+                )
+    
+    # Handling italic
+    new_nodes = split_nodes_delimiter(
+        old_nodes=new_nodes,
+        delimiter="_",
+        text_type=TextType.ITALIC_TEXT,
+    )
+    # Handling code
+    new_nodes = split_nodes_delimiter(
+        old_nodes=new_nodes,
+        delimiter="`",
+        text_type=TextType.CODE_TEXT,
+    )
+    # Handling Images
+    new_nodes = split_nodes_image(
+        old_nodes=new_nodes
+    )
+    # Handling Links
+    new_nodes = split_nodes_link(
+        old_nodes=new_nodes
+    )
+    
+    return new_nodes
+
                                    
 if __name__ == "__main__":
     # old_node = TextNode(
@@ -163,24 +199,31 @@ if __name__ == "__main__":
     # print(len(new_nodes))
     # print(new_nodes)
     
-    text1 = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
-    text2 = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
+    # text1 = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+    # text2 = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
     # print(f"Extracting images: {extract_markdown_images(text1)}")
     # print(f"Extracting links: {extract_markdown_links(text2)}")
     
     # Testing the split_nodes_image
-    node = TextNode(
-        text=text1,
-        text_type=TextType.PLAIN_TEXT
-    )
+    # node = TextNode(
+    #     text=text1,
+    #     text_type=TextType.PLAIN_TEXT
+    # )
     
-    new_nodes = split_nodes_image(old_nodes=[node])
-    print(f"splited images:\n{new_nodes}\n")
+    # new_nodes = split_nodes_image(old_nodes=[node])
+    # print(f"splited images:\n{new_nodes}\n")
     
     # Testing the split_nodes_link.
-    node = TextNode(
-        text=text2,
-        text_type=TextType.PLAIN_TEXT
-    )
-    new_nodes = split_nodes_link(old_nodes=[node])
-    print(f"splited links:\n{new_nodes}")
+    # node = TextNode(
+    #     text=text2,
+    #     text_type=TextType.PLAIN_TEXT
+    # )
+    # new_nodes = split_nodes_link(old_nodes=[node])
+    # print(f"splited links:\n{new_nodes}")
+    
+    # Testing the final function to test all the functions all at once
+    text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+    new_nodes = text_to_textnodes(text=text)
+    print(f"Text: {text}\n")
+    for i, node in enumerate(new_nodes):
+        print(f"node {i+1}: {node}")
