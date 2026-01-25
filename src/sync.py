@@ -47,7 +47,111 @@ def extract_markdown_images(text):
 def extract_markdown_links(text):
     pattern = r"\[([^\[\]]*)\]\(([^\(\)]*)\)"
     return re.findall(pattern, text)
-    
+
+def split_nodes_image(old_nodes: list[TextNode]):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text == "":
+            continue
+        
+        if node.text_type != TextType.PLAIN_TEXT:
+            new_nodes.append(node)
+            continue
+        else:
+            extracted_images = extract_markdown_images(node.text)
+            first = 0
+            img_first = 0
+            nodes = []
+            for img in extracted_images:
+                image = f"![{img[0]}]({img[1]})"
+                img_first = node.text.find(image)
+                # Adding text
+                nodes.append(
+                    TextNode(
+                        text=node.text[first:img_first],
+                        text_type=TextType.PLAIN_TEXT
+                    )
+                )
+                # Adding image
+                nodes.append(
+                    TextNode(
+                        text=img[0],
+                        text_type=TextType.IMAGE,
+                        url=img[1]
+                    )
+                )
+                first = img_first + len(image)
+                
+            # Adding the last part if there is something
+            if node.text[first:] == "":
+                # Extending the final list of nodes
+                new_nodes.extend(nodes)
+                continue
+            else:
+                nodes.append(
+                    TextNode(
+                        text=node.text[first:],
+                        text_type=TextType.PLAIN_TEXT,
+                    )
+                )
+                
+                # Extending the final list of nodes
+                new_nodes.extend(nodes)
+    return new_nodes
+                
+def split_nodes_link(old_nodes : list[TextNode]):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text == "":
+            continue
+        if node.text_type != TextType.PLAIN_TEXT:
+            new_nodes.append(node)
+            continue
+        else:
+            extracted_links = extract_markdown_links(text=node.text)
+            nodes = []
+            first = 0
+            img_first = 0
+            for ext_link in extracted_links:
+                link = f"[{ext_link[0]}]({ext_link[1]})"
+                img_first = node.text.find(link)
+                
+                # Adding the text
+                nodes.append(
+                    TextNode(
+                        text=node.text[first:img_first],
+                        text_type=TextType.PLAIN_TEXT
+                    )
+                )
+                
+                # Adding the link
+                nodes.append(
+                    TextNode(
+                        text=ext_link[0],
+                        text_type=TextType.LINK,
+                        url=ext_link[1]
+                    )
+                )
+                
+                # updating first
+                first = img_first + len(link)
+
+            if node.text[first:] == "":
+                # Expending the new_nodes list
+                new_nodes.extend(nodes)
+                continue
+            else:
+                # Adding the remaining text
+                nodes.append(
+                    TextNode(
+                        text=node.text[first:],
+                        text_type=TextType.PLAIN_TEXT
+                    )
+                )
+                # Extending
+                new_nodes.extend(nodes)
+    return new_nodes
+
                                    
 if __name__ == "__main__":
     # old_node = TextNode(
@@ -61,5 +165,22 @@ if __name__ == "__main__":
     
     text1 = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
     text2 = "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)"
-    print(f"Extracting images: {extract_markdown_images(text1)}")
-    print(f"Extracting links: {extract_markdown_links(text2)}")
+    # print(f"Extracting images: {extract_markdown_images(text1)}")
+    # print(f"Extracting links: {extract_markdown_links(text2)}")
+    
+    # Testing the split_nodes_image
+    node = TextNode(
+        text=text1,
+        text_type=TextType.PLAIN_TEXT
+    )
+    
+    new_nodes = split_nodes_image(old_nodes=[node])
+    print(f"splited images:\n{new_nodes}\n")
+    
+    # Testing the split_nodes_link.
+    node = TextNode(
+        text=text2,
+        text_type=TextType.PLAIN_TEXT
+    )
+    new_nodes = split_nodes_link(old_nodes=[node])
+    print(f"splited links:\n{new_nodes}")
