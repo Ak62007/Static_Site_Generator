@@ -188,6 +188,11 @@ def text_to_textnodes(text):
     
     return new_nodes
 
+
+def markdown_to_blocks(markdown: str):
+    block_list = markdown.split("\n\n")
+    block_list = list(map(lambda x: x.strip(), block_list))
+    return block_list
                                    
 if __name__ == "__main__":
     # old_node = TextNode(
@@ -222,8 +227,25 @@ if __name__ == "__main__":
     # print(f"splited links:\n{new_nodes}")
     
     # Testing the final function to test all the functions all at once
-    text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
-    new_nodes = text_to_textnodes(text=text)
-    print(f"Text: {text}\n")
-    for i, node in enumerate(new_nodes):
-        print(f"node {i+1}: {node}")
+    # text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+    # new_nodes = text_to_textnodes(text=text)
+    # print(f"Text: {text}\n")
+    # for i, node in enumerate(new_nodes):
+    #     print(f"node {i+1}: {node}")
+    
+    # Testing markdown_to_blocks
+    md="""
+## Why O(n) is Better
+
+The complexity notation describes how the number of operations an algorithm performs grows with the input size 1n.2
+
+- **O(n) or Linear Time**: The number of operations grows in direct proportion to the size of the input. If you double the input size, the work roughly doubles.
+    
+- **O(nlogn) or Log-linear Time**: The number of operations grows by the size of the input multiplied by the logarithm of the input size.
+    
+Since the logn term is always greater than 1 for any n greater than the logarithm's base (e.g., for n>2 when using log2), the expression nlogn will always be larger than n.
+"""
+    
+    # print(markdown_to_blocks(markdown=md))
+    for i, sen in enumerate(markdown_to_blocks(md)):
+        print(f"{i+1}. {sen}")
