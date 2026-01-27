@@ -1,4 +1,5 @@
 import re
+from typing import Literal
 from sync import (
     markdown_to_blocks,
     text_to_textnodes,
@@ -19,28 +20,38 @@ from textnode import (
 )
 
 # Helper functions
+def inline_md_to_html_nodes(text: str) -> list[LeafNode]:
+    text_nodes = text_to_textnodes(text=text)
+    html_nodes = list(map(text_node_to_html_node, text_nodes))
+    return html_nodes
+
+def manage_para(block: str) -> list[LeafNode]:
+    return inline_md_to_html_nodes(" ".join(block.split("\n")))
+
 def manage_code(block: str) -> str:
-    return block.strip("```").strip("\n")
+    lines = block.split("\n")
+    if len(lines) > 2:
+        return "\n".join(lines[1:-1])
+    return ""
     
-def manage_ol_ul(block: str) -> list[ParentNode]:
+def manage_ol_ul(block: str, type: Literal["ol", "ul"]) -> list[ParentNode]:
     points = []
     for point in block.split("\n"):
         tag = "li"
-        children = inline_md_to_html_nodes(text=point[2:])
+        if type == "ol":
+            children = inline_md_to_html_nodes(text=point[3:])
+        else:
+            children = inline_md_to_html_nodes(text=point[2:])
         points.append(
             ParentNode(
                 tag=tag,
                 children=children
             )
         )
+    return points
 
 def manage_quotes(block: str) -> str:
-    return " ".join(list(map(lambda x : x[1:], block.split("\n"))))
-
-def inline_md_to_html_nodes(text: str) -> list[LeafNode]:
-    text_nodes = text_to_textnodes(text=text)
-    html_nodes = list(map(text_node_to_html_node, text_nodes))
-    return html_nodes
+    return " ".join(list(map(lambda x : x[2:] if x.startswith("> ") else x[1:], block.split("\n"))))
         
 
 def markdown_to_html_node(markdown: str):
@@ -48,16 +59,19 @@ def markdown_to_html_node(markdown: str):
     block_list = markdown_to_blocks(markdown=markdown)
     u_children = []
     for block in block_list:
+        if block.strip() == "":
+            continue            
+        # print(f"Processing block: {block}")
         # determining the block type
         block_type = block_to_block_type(block=block)
         # Creating the HTMLNode
         if block_type == BlockType.HEADING:
-            pattern = r"^#+ "
+            pattern = r"^#+"
             result = re.match(pattern, block)
             tag = f"h{len(result.group())}"
             children = inline_md_to_html_nodes(text=block[result.end()+1:])
             u_children.append(
-                HTMLNode(
+                ParentNode(
                     tag=tag,
                     children=children,
                 )
@@ -66,7 +80,7 @@ def markdown_to_html_node(markdown: str):
             tag = "blockquote"
             children = inline_md_to_html_nodes(text=manage_quotes(block=block))
             u_children.append(
-                HTMLNode(
+                ParentNode(
                     tag=tag,
                     children=children,
                 )
@@ -74,9 +88,9 @@ def markdown_to_html_node(markdown: str):
             
         elif block_type == BlockType.ORDERED_LIST:
             tag = "ol"
-            children = manage_ol_ul(block=block)
+            children = manage_ol_ul(block=block, type='ol')
             u_children.append(
-                HTMLNode(
+                ParentNode(
                     tag=tag,
                     children=children
                 )
@@ -84,30 +98,33 @@ def markdown_to_html_node(markdown: str):
             
         elif block_type == BlockType.UNORDERED_LIST:
             tag = "ul"
-            children = manage_ol_ul(block=block)
+            children = manage_ol_ul(block=block, type='ul')
             u_children.append(
-                HTMLNode(
+                ParentNode(
                     tag=tag,
                     children=children
                 )
             )
             
         elif block_type == BlockType.CODE:
-            u_children.append(
-                text_node_to_html_node(
-                    text_node=TextNode(
-                        text=manage_code(block=block),
-                        text_type=TextType.CODE_TEXT
-                    )
-                )
+            code_node = text_node_to_html_node(
+                            text_node=TextNode(
+                                text=manage_code(block=block),
+                                text_type=TextType.CODE_TEXT
+                            )
+                        )
+            pre_node = ParentNode(
+                tag="pre",
+                children=[code_node]
             )
             
+            u_children.append(pre_node)
         else:
             # this has to be paragraph type
             tag = "p"
-            children = inline_md_to_html_nodes(text=block)
-            u_children(
-                HTMLNode(
+            children = manage_para(block=block)
+            u_children.append(
+                ParentNode(
                     tag=tag,
                     children=children
                 )
@@ -119,3 +136,14 @@ def markdown_to_html_node(markdown: str):
     )
     
     return parent_node
+
+
+if __name__ == "__main__":
+    md = """
+```
+This is text that _should_ remain
+the **same** even with inline stuff
+```
+    """
+    node = markdown_to_html_node(markdown=md)
+    print(node.to_html())

@@ -23,10 +23,10 @@ def block_to_block_type(block: str) -> BlockType:
     elif re.match(code_pattern, block):
         return BlockType.CODE
     # quote block
-    elif all(sen[0] == ">" for sen in block.split("\n") if sen != ""):
+    elif all(sen.startswith(">") for sen in block.split("\n") if sen.strip() != ""):
         return BlockType.QUOTE
     # unordered list
-    elif all((sen[0] == "-") and (sen[1] == " ") for sen in block.split("\n") if sen != ""):
+    elif all(sen.startswith("- ") for sen in block.split("\n") if sen.strip() != ""):
         return BlockType.UNORDERED_LIST
     # ordered list
     elif all(re.match(ordered_list_pattern, sen) for sen in block.split("\n")):

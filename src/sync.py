@@ -233,17 +233,12 @@ if __name__ == "__main__":
     #     print(f"node {i+1}: {node}")
     
     # Testing markdown_to_blocks
-    md="""
-## Why O(n) is Better
-
-The complexity notation describes how the number of operations an algorithm performs grows with the input size 1n.2
-
-- **O(n) or Linear Time**: The number of operations grows in direct proportion to the size of the input. If you double the input size, the work roughly doubles.
-    
-- **O(nlogn) or Log-linear Time**: The number of operations grows by the size of the input multiplied by the logarithm of the input size.
-    
-Since the logn term is always greater than 1 for any n greater than the logarithm's base (e.g., for n>2 when using log2), the expression nlogn will always be larger than n.
-"""
+    md = """
+```
+This is text that _should_ remain
+the **same** even with inline stuff
+```
+    """
     
     # print(markdown_to_blocks(markdown=md))
     for i, sen in enumerate(markdown_to_blocks(md)):
