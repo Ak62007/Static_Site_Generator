@@ -15,10 +15,23 @@ def block_to_block_type(block: str) -> BlockType:
     heading_pattern = r"(?<!\*)\#{1,6} "
     # Code
     code_pattern = r"^```[a-zA-Z0-9]*\n[\s\S]*?\n```$"
+    # ordered list
+    ordered_list_pattern = r"^[1-9]\d*\. "
     
-    if re.match(pattern=heading_pattern):
+    if re.match(heading_pattern, block):
         return BlockType.HEADING
-    elif re.match(pattern=code_pattern):
+    elif re.match(code_pattern, block):
         return BlockType.CODE
+    # quote block
+    elif all(sen[0] == ">" for sen in block.split("\n") if sen != ""):
+        return BlockType.QUOTE
+    # unordered list
+    elif all((sen[0] == "-") and (sen[1] == " ") for sen in block.split("\n") if sen != ""):
+        return BlockType.UNORDERED_LIST
+    # ordered list
+    elif all(re.match(ordered_list_pattern, sen) for sen in block.split("\n")):
+        return BlockType.ORDERED_LIST
+    else:
+        return BlockType.PARAGRAPH
         
     
