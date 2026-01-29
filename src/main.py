@@ -6,7 +6,9 @@ from generate import (
 
 def main():
     # getting the basepath
-    basepath = sys.argv[0] if len(sys.argv) != 0 else '/'
+    basepath = "/"
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
     
     # copying files from static to docs
     transfer_contents(dest="docs", source="static")
